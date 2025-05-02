@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSR Eligibility Self-Assessment Tool</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        input[type="text"],
+        input[type="email"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            margin: 20px auto;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .question-container {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        .options-group {
+            margin: 15px 0;
+        }
+        .option {
+            display: block;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+        .result-container {
+            display: none;
+            text-align: center;
+            animation: fadeIn 0.5s;
+        }
+        .score-display {
+            font-size: 36px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 20px 0;
+        }
+        .performance-level {
+            font-size: 24px;
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .perfect {
+            background-color: #27ae60;
+            color: white;
+        }
+        .needsWork {
+            background-color: #f39c12;
+            color: white;
+        }
+        .needsUrgent {
+            background-color: #e67e22;
+            color: white;
+        }
+        .expertAdvice {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .course-suggestion {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            margin: 20px 0;
+            height: 10px;
+        }
+        .progress {
+            height: 10px;
+            background-color: #3498db;
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CSR Eligibility Self-Assessment Tool</h1>
+
+        <!-- Start Section -->
+        <div id="startSection" class="section">
+            <button id="startBtn">Start Assessment</button>
+        </div>
+
+        <!-- Test Section -->
+        <div id="testSection" class="section question-container">
+            <div class="progress-bar">
+                <div class="progress" id="progressBar"></div>
+            </div>
+            <h2>Charity Commissioner Compliance</h2>
+
+            <!-- Question 1 -->
+            <div id="question1" class="question">
+                <h3>Question 1 of 2</h3>
+                <p>Does your organization have a Registration Certificate?</p>
+                <div class="options-group">
+                    <label class="option"><input type="radio" name="q1" value="3"> Yes</label>
+                    <label class="option"><input type="radio" name="q1" value="2"> Work in Progress</label>
+                    <label class="option"><input type="radio" name="q1" value="1"> No</label>
+                    <label class="option"><input type="radio" name="q1" value="0"> Don't Know</label>
+                </div>
+                <button id="nextQ1Btn">Next</button>
+            </div>
+
+            <!-- Question 2 -->
+            <div id="question2" class="question" style="display: none;">
+                <h3>Question 2 of 2</h3>
+                <p>Does your organization submit the Change Report?</p>
+                <div class="options-group">
+                    <label class="option"><input type="radio" name="q2" value="3"> Yes</label>
+                    <label class="option"><input type="radio" name="q2" value="2"> Work in Progress</label>
+                    <label class="option"><input type="radio" name="q2" value="1"> No</label>
+                    <label class="option"><input type="radio" name="q2" value="0"> Don't Know</label>
+                </div>
+                <button id="seeResultBtn">See Result</button>
+            </div>
+        </div>
+
+        <!-- Result Section -->
+        <div id="resultSection" class="section result-container">
+            <h2>Assessment Result</h2>
+            <div id="scorePercentage" class="score-display">0%</div>
+            <div id="performanceLevel" class="performance-level">Performance Level</div>
+            <div id="courseSuggestion" class="course-suggestion">
+                <h3>Recommended Course</h3>
+                <p id="courseText">Course recommendation here</p>
+            </div>
+            <button id="restartBtn">Start New Assessment</button>
+        </div>
+    </div>
+
+    <script>
+        let currentScore = 0;
+        const maxScore = 6;
+
+        const startSection = document.getElementById('startSection');
+        const testSection = document.getElementById('testSection');
+        const question1 = document.getElementById('question1');
+        const question2 = document.getElementById('question2');
+        const resultSection = document.getElementById('resultSection');
+        const progressBar = document.getElementById('progressBar');
+
+        document.getElementById('startBtn').addEventListener('click', function () {
+            startSection.style.display = 'none';
+            testSection.style.display = 'block';
+            question1.style.display = 'block';
+            progressBar.style.width = '0%';
+        });
+
+        document.getElementById('nextQ1Btn').addEventListener('click', function () {
+            const selectedOption = document.querySelector('input[name="q1"]:checked');
+            if (!selectedOption) {
+                alert('Please select an answer before proceeding.');
+                return;
+            }
+            currentScore += parseInt(selectedOption.value);
+            question1.style.display = 'none';
+            question2.style.display = 'block';
+            progressBar.style.width = '50%';
+        });
+
+        document.getElementById('seeResultBtn').addEventListener('click', function () {
+            const selectedOption = document.querySelector('input[name="q2"]:checked');
+            if (!selectedOption) {
+                alert('Please select an answer before proceeding.');
+                return;
+            }
+            currentScore += parseInt(selectedOption.value);
+            const percentage = Math.round((currentScore / maxScore) * 100);
+            document.getElementById('scorePercentage').textContent = percentage + '%';
+
+            const performanceLevel = document.getElementById('performanceLevel');
+            let levelText = '';
+            let levelClass = '';
+            let course = '';
+
+            if (percentage >= 80) {
+                levelText = 'Perfect';
+                levelClass = 'perfect';
+                course = 'Legal Compliance';
+            } else if (percentage >= 60) {
+                levelText = 'Needs Work';
+                levelClass = 'needsWork';
+                course = 'Governance Training';
+            } else if (percentage >= 40) {
+                levelText = 'Needs Urgent Attention';
+                levelClass = 'needsUrgent';
+                course = 'Office Administration';
+            } else {
+                levelText = 'Expert Advice Needed';
+                levelClass = 'expertAdvice';
+                course = 'Comprehensive CSR & Compliance Program';
+            }
+
+            performanceLevel.textContent = levelText;
+            performanceLevel.className = 'performance-level ' + levelClass;
+            document.getElementById('courseText').textContent = 'You may benefit from the ' + course + ' course.';
+            testSection.style.display = 'none';
+            resultSection.style.display = 'block';
+            progressBar.style.width = '100%';
+        });
+
+        document.getElementById('restartBtn').addEventListener('click', function () {
+            const radioButtons = document.querySelectorAll('input[type="radio"]');
+            radioButtons.forEach(radio => radio.checked = false);
+            currentScore = 0;
+            resultSection.style.display = 'none';
+            question2.style.display = 'none';
+            question1.style.display = 'none';
+            startSection.style.display = 'block';
+            progressBar.style.width = '0%';
+        });
+    </script>
+</body>
+</html>
