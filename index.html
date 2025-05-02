@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CSR Eligibility Self-Assessment Tool</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -131,6 +133,9 @@
             width: 0%;
             transition: width 0.3s;
         }
+        .download-btn {
+            background-color: #16a085;
+        }
     </style>
 </head>
 <body>
@@ -147,11 +152,11 @@
             <div class="progress-bar">
                 <div class="progress" id="progressBar"></div>
             </div>
-            <h2>Charity Commissioner Compliance</h2>
+            <h2 id="sectionTitle">Charity Commissioner Compliance</h2>
 
             <!-- Question 1 -->
             <div id="question1" class="question">
-                <h3>Question 1 of 2</h3>
+                <h3>Question 1 of 4</h3>
                 <p>Does your organization have a Registration Certificate?</p>
                 <div class="options-group">
                     <label class="option"><input type="radio" name="q1" value="3"> Yes</label>
@@ -164,13 +169,39 @@
 
             <!-- Question 2 -->
             <div id="question2" class="question" style="display: none;">
-                <h3>Question 2 of 2</h3>
+                <h3>Question 2 of 4</h3>
                 <p>Does your organization submit the Change Report?</p>
                 <div class="options-group">
                     <label class="option"><input type="radio" name="q2" value="3"> Yes</label>
                     <label class="option"><input type="radio" name="q2" value="2"> Work in Progress</label>
                     <label class="option"><input type="radio" name="q2" value="1"> No</label>
                     <label class="option"><input type="radio" name="q2" value="0"> Don't Know</label>
+                </div>
+                <button id="nextQ2Btn">Next</button>
+            </div>
+
+            <!-- Question 3 -->
+            <div id="question3" class="question" style="display: none;">
+                <h3>Question 3 of 4</h3>
+                <p>Has your organization filed Income Tax Returns in the last 3 years?</p>
+                <div class="options-group">
+                    <label class="option"><input type="radio" name="q3" value="3"> Yes</label>
+                    <label class="option"><input type="radio" name="q3" value="2"> Work in Progress</label>
+                    <label class="option"><input type="radio" name="q3" value="1"> No</label>
+                    <label class="option"><input type="radio" name="q3" value="0"> Don't Know</label>
+                </div>
+                <button id="nextQ3Btn">Next</button>
+            </div>
+
+            <!-- Question 4 -->
+            <div id="question4" class="question" style="display: none;">
+                <h3>Question 4 of 4</h3>
+                <p>Does your organization have valid 12AA certification?</p>
+                <div class="options-group">
+                    <label class="option"><input type="radio" name="q4" value="3"> Yes</label>
+                    <label class="option"><input type="radio" name="q4" value="2"> Work in Progress</label>
+                    <label class="option"><input type="radio" name="q4" value="1"> No</label>
+                    <label class="option"><input type="radio" name="q4" value="0"> Don't Know</label>
                 </div>
                 <button id="seeResultBtn">See Result</button>
             </div>
@@ -185,26 +216,37 @@
                 <h3>Recommended Course</h3>
                 <p id="courseText">Course recommendation here</p>
             </div>
+            <button id="downloadBtn" class="download-btn">Download PDF Report</button>
             <button id="restartBtn">Start New Assessment</button>
         </div>
     </div>
 
     <script>
+        // Initialize jsPDF
+        const { jsPDF } = window.jspdf;
+
         let currentScore = 0;
-        const maxScore = 6;
+        const maxScore = 12; // 4 questions * max 3 points each
 
         const startSection = document.getElementById('startSection');
         const testSection = document.getElementById('testSection');
         const question1 = document.getElementById('question1');
         const question2 = document.getElementById('question2');
+        const question3 = document.getElementById('question3');
+        const question4 = document.getElementById('question4');
         const resultSection = document.getElementById('resultSection');
         const progressBar = document.getElementById('progressBar');
+        const sectionTitle = document.getElementById('sectionTitle');
+
+        // Store answers for PDF report
+        const answers = [];
 
         document.getElementById('startBtn').addEventListener('click', function () {
             startSection.style.display = 'none';
             testSection.style.display = 'block';
             question1.style.display = 'block';
             progressBar.style.width = '0%';
+            sectionTitle.textContent = "Charity Commissioner Compliance";
         });
 
         document.getElementById('nextQ1Btn').addEventListener('click', function () {
@@ -214,18 +256,64 @@
                 return;
             }
             currentScore += parseInt(selectedOption.value);
+            answers.push({
+                question: "1. Does your organization have a Registration Certificate?",
+                answer: getAnswerText(selectedOption.value),
+                score: selectedOption.value
+            });
             question1.style.display = 'none';
             question2.style.display = 'block';
-            progressBar.style.width = '50%';
+            progressBar.style.width = '25%';
         });
 
-        document.getElementById('seeResultBtn').addEventListener('click', function () {
+        document.getElementById('nextQ2Btn').addEventListener('click', function () {
             const selectedOption = document.querySelector('input[name="q2"]:checked');
             if (!selectedOption) {
                 alert('Please select an answer before proceeding.');
                 return;
             }
             currentScore += parseInt(selectedOption.value);
+            answers.push({
+                question: "2. Does your organization submit the Change Report?",
+                answer: getAnswerText(selectedOption.value),
+                score: selectedOption.value
+            });
+            question2.style.display = 'none';
+            question3.style.display = 'block';
+            sectionTitle.textContent = "Income Tax Compliance";
+            progressBar.style.width = '50%';
+        });
+
+        document.getElementById('nextQ3Btn').addEventListener('click', function () {
+            const selectedOption = document.querySelector('input[name="q3"]:checked');
+            if (!selectedOption) {
+                alert('Please select an answer before proceeding.');
+                return;
+            }
+            currentScore += parseInt(selectedOption.value);
+            answers.push({
+                question: "3. Has your organization filed Income Tax Returns in the last 3 years?",
+                answer: getAnswerText(selectedOption.value),
+                score: selectedOption.value
+            });
+            question3.style.display = 'none';
+            question4.style.display = 'block';
+            progressBar.style.width = '75%';
+        });
+
+        document.getElementById('seeResultBtn').addEventListener('click', function () {
+            const selectedOption = document.querySelector('input[name="q4"]:checked');
+            if (!selectedOption) {
+                alert('Please select an answer before proceeding.');
+                return;
+            }
+            currentScore += parseInt(selectedOption.value);
+            answers.push({
+                question: "4. Does your organization have valid 12AA certification?",
+                answer: getAnswerText(selectedOption.value),
+                score: selectedOption.value
+            });
+            
             const percentage = Math.round((currentScore / maxScore) * 100);
             document.getElementById('scorePercentage').textContent = percentage + '%';
 
@@ -264,12 +352,57 @@
             const radioButtons = document.querySelectorAll('input[type="radio"]');
             radioButtons.forEach(radio => radio.checked = false);
             currentScore = 0;
+            answers.length = 0;
             resultSection.style.display = 'none';
-            question2.style.display = 'none';
+            question4.style.display = 'none';
             question1.style.display = 'none';
             startSection.style.display = 'block';
             progressBar.style.width = '0%';
         });
+
+        document.getElementById('downloadBtn').addEventListener('click', generatePDF);
+
+        function getAnswerText(value) {
+            switch(value) {
+                case '3': return 'Yes';
+                case '2': return 'Work in Progress';
+                case '1': return 'No';
+                case '0': return 'Don\'t Know';
+                default: return '';
+            }
+        }
+
+        function generatePDF() {
+            const doc = new jsPDF();
+            
+            // Title
+            doc.setFontSize(20);
+            doc.text('CSR Eligibility Assessment Report', 105, 20, { align: 'center' });
+            
+            // Score Summary
+            doc.setFontSize(14);
+            doc.text(`Overall Score: ${document.getElementById('scorePercentage').textContent}`, 20, 40);
+            doc.text(`Performance Level: ${document.getElementById('performanceLevel').textContent}`, 20, 50);
+            doc.text(`Recommendation: ${document.getElementById('courseText').textContent}`, 20, 60);
+            
+            // Answers
+            doc.setFontSize(12);
+            doc.text('Assessment Details:', 20, 80);
+            
+            let yPosition = 90;
+            answers.forEach((item, index) => {
+                if (yPosition > 250) {
+                    doc.addPage();
+                    yPosition = 20;
+                }
+                doc.text(`${item.question}`, 20, yPosition);
+                doc.text(`Answer: ${item.answer} (Score: ${item.score}/3)`, 25, yPosition + 10);
+                yPosition += 20;
+            });
+            
+            // Save the PDF
+            doc.save('CSR_Assessment_Report.pdf');
+        }
     </script>
 </body>
 </html>
